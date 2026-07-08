@@ -2,11 +2,69 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My First Git page Open</title>
+    <title>Galaga Style Shooter</title>
+    <style>
+        body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: sans-serif; }
+        canvas { border: 2px solid #555; background: #000; }
+    </style>
 </head>
 <body>
-    <h1>Hello My Page</h1>
-    <h2>Welcome</h2>
+
+<canvas id="gameCanvas" width="480" height="640"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let player = { x: 240, y: 600, w: 30, h: 30 };
+    let bullets = [];
+    let enemies = [];
+    let keys = {};
+
+    // 키보드 입력
+    document.addEventListener("keydown", (e) => keys[e.code] = true);
+    document.addEventListener("keyup", (e) => keys[e.code] = false);
+
+    // 적 생성
+    for(let i=0; i<8; i++) enemies.push({ x: 50 + i*50, y: 50, w: 30, h: 30 });
+
+    function update() {
+        if (keys["ArrowLeft"] && player.x > 0) player.x -= 5;
+        if (keys["ArrowRight"] && player.x < canvas.width - player.w) player.x += 5;
+        if (keys["Space"]) {
+            bullets.push({ x: player.x + 12, y: player.y });
+            keys["Space"] = false; // 연사 방지
+        }
+
+        bullets.forEach((b, i) => {
+            b.y -= 7;
+            if (b.y < 0) bullets.splice(i, 1);
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 플레이어
+        ctx.fillStyle = "#00ff00";
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+
+        // 총알
+        ctx.fillStyle = "yellow";
+        bullets.forEach(b => ctx.fillRect(b.x, b.y, 5, 10));
+
+        // 적
+        ctx.fillStyle = "red";
+        enemies.forEach(e => ctx.fillRect(e.x, e.y, e.w, e.h));
+    }
+
+    function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    loop();
+</script>
 </body>
 </html>
