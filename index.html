@@ -2,108 +2,62 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>심플 슈팅 게임</title>
+    <title>7초 순발력 게임</title>
     <style>
-        body { margin: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; color: #fff; font-family: 'Arial', sans-serif; overflow: hidden; }
-        canvas { border: 2px solid #555; background: #050505; }
-        .ui { margin-top: 10px; text-align: center; }
+        body { margin: 0; background: #2c3e50; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Arial', sans-serif; }
+        #timer { font-size: 80px; margin-bottom: 20px; font-weight: bold; }
+        button { padding: 15px 30px; font-size: 20px; cursor: pointer; border: none; border-radius: 5px; background: #e74c3c; color: white; transition: 0.3s; }
+        button:hover { background: #c0392b; }
+        button:disabled { background: #7f8c8d; cursor: not-allowed; }
+        #result { margin-top: 20px; font-size: 24px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <canvas id="gameCanvas" width="480" height="600"></canvas>
-    <div class="ui">
-        <p>조작: 방향키(이동), 스페이스바(발사)</p>
-        <p>점수: <span id="score">0</span></p>
-    </div>
+    <div id="timer">0.00</div>
+    <button id="btn" onclick="toggleGame()">게임 시작</button>
+    <div id="result"></div>
 
 <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const scoreElement = document.getElementById("score");
+    let timerInterval;
+    let startTime;
+    let isRunning = false;
+    const timerDisplay = document.getElementById("timer");
+    const btn = document.getElementById("btn");
+    const resultDisplay = document.getElementById("result");
 
-    let score = 0;
-    let player = { x: 225, y: 550, w: 30, h: 30, speed: 7 };
-    let bullets = [];
-    let enemies = [];
-    let keys = {};
-
-    // 키보드 이벤트
-    window.addEventListener("keydown", (e) => keys[e.code] = true);
-    window.addEventListener("keyup", (e) => keys[e.code] = false);
-
-    // 적 생성 함수
-    function spawnEnemy() {
-        if (Math.random() < 0.03) {
-            enemies.push({ x: Math.random() * (canvas.width - 30), y: -30, w: 30, h: 30, speed: 2 + Math.random() * 2 });
-        }
-    }
-
-    function update() {
-        // 플레이어 이동
-        if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
-        if (keys["ArrowRight"] && player.x < canvas.width - player.w) player.x += player.speed;
-
-        // 총알 발사
-        if (keys["Space"]) {
-            if (bullets.length === 0 || bullets[bullets.length - 1].y < player.y - 50) {
-                bullets.push({ x: player.x + 12, y: player.y, w: 6, h: 10 });
+    function toggleGame() {
+        if (!isRunning) {
+            // 시작
+            isRunning = true;
+            btn.innerText = "멈추기!";
+            resultDisplay.innerText = "";
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                let elapsed = (Date.now() - startTime) / 1000;
+                timerDisplay.innerText = elapsed.toFixed(2);
+            }, 10);
+        } else {
+            // 멈추기
+            isRunning = false;
+            clearInterval(timerInterval);
+            btn.innerText = "다시 하기";
+            
+            let finalTime = parseFloat(timerDisplay.innerText);
+            let diff = Math.abs(finalTime - 7.00);
+            
+            if (diff <= 0.1) {
+                resultDisplay.innerText = "퍼펙트! 당신의 순발력은 최고입니다!";
+                resultDisplay.style.color = "#2ecc71";
+            } else if (diff <= 0.5) {
+                resultDisplay.innerText = "아깝습니다! 7초에 아주 근접했어요.";
+                resultDisplay.style.color = "#f1c40f";
+            } else {
+                resultDisplay.innerText = "다시 도전해보세요!";
+                resultDisplay.style.color = "#e74c3c";
             }
         }
-
-        // 총알 이동 및 충돌
-        bullets.forEach((b, bi) => {
-            b.y -= 8;
-            if (b.y < 0) bullets.splice(bi, 1);
-            
-            enemies.forEach((e, ei) => {
-                if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
-                    enemies.splice(ei, 1);
-                    bullets.splice(bi, 1);
-                    score += 10;
-                    scoreElement.innerText = score;
-                }
-            });
-        });
-
-        // 적 이동
-        enemies.forEach((e, i) => {
-            e.y += e.speed;
-            if (e.y > canvas.height) enemies.splice(i, 1);
-        });
-
-        spawnEnemy();
     }
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // 플레이어 (삼각형)
-        ctx.fillStyle = "#00ffcc";
-        ctx.beginPath();
-        ctx.moveTo(player.x + player.w/2, player.y);
-        ctx.lineTo(player.x, player.y + player.h);
-        ctx.lineTo(player.x + player.w, player.y + player.h);
-        ctx.fill();
-
-        // 총알
-        ctx.fillStyle = "#ffff00";
-        bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
-
-        // 적 (사각형)
-        ctx.fillStyle = "#ff3366";
-        enemies.forEach(e => ctx.fillRect(e.x, e.y, e.w, e.h));
-    }
-
-    function gameLoop() {
-        update();
-        draw();
-        requestAnimationFrame(gameLoop);
-    }
-
-    gameLoop();
 </script>
-</body>
-</html>
 </body>
 </html>
